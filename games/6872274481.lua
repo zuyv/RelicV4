@@ -4884,6 +4884,157 @@ run(function()
 end)
 	
 run(function()
+	local BetterFisher
+	local old = {
+		Dur = nil,
+		Marker = nil,
+		Fill = nil,
+		Drain = nil,
+		ZoneSize = nil,
+		Speed = nil,
+		Gold = nil,
+		Minigame  = nil
+	}
+	local Duration
+	local fillAmount
+	local drainAmount
+	local fishzooneSpeedMuti
+	local AutoPlay
+	local FishermanUtil = bedwars.FishermanUtil
+	local FishType = bedwars.FishMeta.FishType
+	local FishMeta = bedwars.FishMeta.FishMeta
+
+	local FishNames = {
+		fish_iron = "Iron Fish",
+		fish_diamond = "Diamond Fish",
+		fish_emerald = "Emerald Fish",
+		fish_special = "Special Fish",
+		fish_gold = "Gold Fish",
+	}	
+
+	BetterFisher = vape.Categories.Kits:CreateModule({
+		Name = "EasyFisher",
+		Tooltip = 'EasyFisher makes fishing easier',
+		Function = function(callback)
+			if store.equippedKit ~= "fisherman" then
+				vape:CreateNotification("EasyFisher", "Kit required only!", 6, "warning")
+				return
+			end
+			if callback then
+
+				if AutoPlay.Enabled then
+					old.Minigame = bedwars.FishingMinigameController.startMinigame
+					bedwars.FishingMinigameController.startMinigame = function(self, Data, results)
+						if not AutoPlay.Enabled then
+							return old.Minigame(self, Data, results)
+						end
+						if not Data.fishModel then
+							return old.Minigame(self,Data,results)
+						end
+						vape:CreateNotification("EasyFisher", `You caught an {FishNames[Data.fishModel]} and u will receive {Data.drops[1].itemType} with {Data.drops[1].amount} amount`, 8)
+						local pull = bedwars.GameAnimationUtil:playAnimation(lplr, bedwars.AnimationType.FISHING_ROD_PULLING)
+						local Duration = (Duration.Value / 2.25 + math.random())
+						task.wait(Duration)
+						if pull then
+							pull:Stop()
+							pull = nil
+						end									
+						local success = bedwars.GameAnimationUtil:playAnimation(lplr, bedwars.AnimationType.FISHING_ROD_CATCH_SUCCESS)
+						task.wait(0.025)
+						results({win = true})
+						if success then
+							success:Stop()
+							success = nil
+						end	
+					end
+
+					BetterFisher:Clean(function()
+					  	bedwars.FishingMinigameController.startMinigame = old.Minigame
+						old.Minigame = nil
+						if pull then
+							pull:Stop()
+							pull = nil
+						end
+						if success then
+							success:Stop()
+							success = nil
+						end											
+					end)
+				else
+					old.Dur = FishermanUtil.minigameDuration
+					old.Marker = FishermanUtil.markerSize
+					old.Fill = FishermanUtil.fillAmount
+					old.Drain = FishermanUtil.drainAmount
+					old.ZoneSize = FishermanUtil.fishZoneSize
+					old.Speed = FishermanUtil.fishZoneSpeedMultiplier
+					old.Gold = FishMeta[FishType.GOLD].color
+					FishermanUtil.minigameDuration = Duration.Value 
+					FishermanUtil.markerSize = UDim2.fromScale(0.5, 1.5) 
+					FishermanUtil.fillAmount = fillAmount.Value
+					FishermanUtil.drainAmount = drainAmount.Value
+					FishermanUtil.fishZoneSize = UDim2.fromScale(0.1, 1.4) 
+					FishermanUtil.fishZoneSpeedMultiplier =fishzooneSpeedMuti.Value
+					FishMeta[FishType.GOLD].color = Color3.fromRGB(255, 0, 0)
+				end
+			else
+				if old.Dur then
+					FishermanUtil.minigameDuration = old.Dur 
+					FishermanUtil.markerSize = old.Marker 
+					FishermanUtil.fillAmount = old.Fill 
+					FishermanUtil.drainAmount = old.Drain 
+					FishermanUtil.fishZoneSize = old.ZoneSize 
+					FishermanUtil.fishZoneSpeedMultiplier = old.Speed 
+					FishMeta[FishType.GOLD].color = old.Gold 
+					old.Dur = nil
+					old.Marker = nil
+					old.Fill = nil
+					old.Drain = nil
+					old.ZoneSize = nil
+					old.Speed = nil
+					old.Gold = nil
+				end
+			end
+		end
+	})
+	Duration = BetterFisher:CreateSlider({
+		Name = "Duration",
+		Tooltip = 'how long the minigame should be',
+		Min = 0,
+		Max = 30,
+		Default = 10
+	})
+	fillAmount = BetterFisher:CreateSlider({
+		Name = "Fill Amount",
+		Tooltip = 'when in ur in the fish zone is how much times it will fill up',
+		Min = 0,
+		Max = 10,
+		Default = 0.02,
+		Decimal = 10,
+	})
+	drainAmount = BetterFisher:CreateSlider({
+		Name = "Drain Amount",
+		Tooltip = 'when in ur not in the fish zone is how much times it will drain down',
+		Min = 0,
+		Max = 10,
+		Default = 0.001,
+		Decimal = 10,
+	})
+	fishzooneSpeedMuti = BetterFisher:CreateSlider({
+		Name = "FishZoneSpeed",
+		Tooltip = 'how fast the gaining when in the fish zone',
+		Min = 0,
+		Max = 60,
+		Default = 1,
+		Decimal = 5,
+	})
+	AutoPlay = BetterFisher:CreateToggle({
+		Name = "AutoPlay",
+		Tooltip = 'hides the minigame and does it for you(loot esp as well)',
+		Default = false
+	})
+end)
+
+run(function()
 	local AutoSuffocate
 	local Range
 	local LimitItem
