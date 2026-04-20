@@ -7066,7 +7066,121 @@ run(function()
 		Max = 120
 	})
 end)
+
+
+run(function()
+	local FishermanSpy
+	local IgnoreTeammates
+
+	local FishNames = {
+		fish_iron = "Iron Fish",
+		fish_diamond = "Diamond Fish",
+		fish_emerald = "Emerald Fish",
+		fish_special = "Special Fish",
+		fish_gold = "Gold Fish",
+	}	
 	
+	FishermanSpy = vape.Categories.Kits:CreateModule({
+		Name = "FishermanSpy",
+		Tooltip = 'Notifys you when someone catches a fish',
+		Function = function(callback)
+			if callback then
+				bedwars.Client:WaitFor("FishCaught"):andThen(function(rbx)
+					FishermanSpy:Clean(rbx:Connect(function(tbl)
+						local char = tbl.catchingPlayer.Character
+						local fish = tbl.dropData.fishModel
+						local plrName = char.Name
+						local str = plrName:sub(1, 1):upper()..plrName:sub(2) or 'NIL'
+						local strfish = FishNames[tostring(fish)] or 'NIL Fish'
+						if IgnoreTeammates.Enabled then
+							local currentTeam = lplr.Team
+							local currentplr = playersService:GetPlayerFromCharacter(char)
+							if currentplr.Team == currentTeam then
+							else
+								notif("FishermanSpy",`{str} has caught an {strfish}`,8)
+							end
+						else
+							notif("FishermanSpy",`{str} has caught an {strfish}`,8)
+						end
+					end))
+				end)
+			end
+		end
+	})
+	IgnoreTeammates = FishermanSpy:CreateToggle({Name='Ignore Teammates',Default=true})
+end)
+
+run(function()
+	local Desync
+	local New
+	Desync = vape.Categories.World:CreateModule({
+		Name = 'Desync',
+		Function = function(callback)
+			local function cb1()
+
+				if not setfflag then vape:CreateNotification("Relic", "Your current executor '"..identifyexecutor().."' does not support setfflag", 6, "warning"); return end     
+				if New.Enabled then
+					repeat
+						setfflag('DFIntDebugDefaultTargetWorldStepsPerFrame', '-2147483648')
+						setfflag('DFIntMaxMissedWorldStepsRemembered', '-2147483648')
+						setfflag('DFIntWorldStepsOffsetAdjustRate', '2147483648')
+						setfflag('DFIntDebugSendDistInSteps', '-2147483648')
+						setfflag('DFIntWorldStepMax', '-2147483648')
+						setfflag('DFIntWarpFactor', '2147483648')
+						task.wait()
+					until not Desync.Enabled
+				else
+					if callback then
+						setfflag('NextGenReplicatorEnabledWrite4', 'true')
+					else
+						setfflag('NextGenReplicatorEnabledWrite4', 'false')
+					end
+				end
+
+			end
+			local function cb2()
+				vape:CreateNotification("Desync","Disabled...",8,'warning')
+			end
+			vape:CreatePoll("Desync","Are you sure you want to use this?",8,"warning",cb1,cb2)
+		end,
+		Tooltip = 'Desync will ban you for client modifications.'
+	})
+	New = Desync:CreateToggle({Name="New",Tooltip='this uses the new method(u can hit people)',Default=false})
+end)
+
+run(function()
+	local PromptDuration
+	local Duration
+	if not fireproximityprompt then
+		vape:CreateNotification("Relic",	`{identifyexecutor()})[1] does not support Fireproximityprompt for Prompt Duration`,3,'alert')
+		return
+	end
+	PromptDuration = vape.Categories.Legit:CreateModule({
+		Name = 'Prompting',
+		Tooltip = 'Changes duration of prompts that require holding (ProximityPrompts)',
+		Function = function(call)
+			if call then
+				PromptDuration:Clean(proximityPromptService.PromptButtonHoldBegan:Connect(function(prompt, player)
+					if player == lplr then
+						task.delay(Duration.Value, fireproximityprompt, prompt)
+					end
+				end))
+			end
+		end
+	})
+
+	Duration = PromptDuration:CreateSlider({
+		Name = 'Duration',
+		Min = 0,
+		Max = 2,
+		Default = 0,
+		Suffix = function(val)
+			return val > 1 and 'secs' or 'sec'
+		end,
+		Decimal = 5
+	})
+end)
+
 run(function()
 	local FPSBoost
 	local Kill
